@@ -1,0 +1,45 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35506.116 d17.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EZATradeBot07.AppHost", "EZATradeBot07.AppHost\EZATradeBot07.AppHost.csproj", "{AD975F96-B882-4E68-9112-3D77486CBF21}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EZATradeBot07.ServiceDefaults", "EZATradeBot07.ServiceDefaults\EZATradeBot07.ServiceDefaults.csproj", "{CC4424C4-BD7A-4565-92C6-853D3A877FCB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EZATradeBot07.ApiService", "EZATradeBot07.ApiService\EZATradeBot07.ApiService.csproj", "{2893DF85-00D2-4F22-9E4C-45E9C7CF5C75}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EZATradeBot07.Web", "EZATradeBot07.Web\EZATradeBot07.Web.csproj", "{86CA86F4-C6FE-4A8A-AD99-834599AB3611}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EZATradeBot07.Tests", "EZATradeBot07.Tests\EZATradeBot07.Tests.csproj", "{9F07B01C-6631-4445-96F2-74F0D2A7D3F8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AD975F96-B882-4E68-9112-3D77486CBF21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD975F96-B882-4E68-9112-3D77486CBF21}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD975F96-B882-4E68-9112-3D77486CBF21}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD975F96-B882-4E68-9112-3D77486CBF21}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC4424C4-BD7A-4565-92C6-853D3A877FCB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC4424C4-BD7A-4565-92C6-853D3A877FCB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC4424C4-BD7A-4565-92C6-853D3A877FCB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC4424C4-BD7A-4565-92C6-853D3A877FCB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2893DF85-00D2-4F22-9E4C-45E9C7CF5C75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2893DF85-00D2-4F22-9E4C-45E9C7CF5C75}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2893DF85-00D2-4F22-9E4C-45E9C7CF5C75}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2893DF85-00D2-4F22-9E4C-45E9C7CF5C75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{86CA86F4-C6FE-4A8A-AD99-834599AB3611}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86CA86F4-C6FE-4A8A-AD99-834599AB3611}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86CA86F4-C6FE-4A8A-AD99-834599AB3611}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86CA86F4-C6FE-4A8A-AD99-834599AB3611}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F07B01C-6631-4445-96F2-74F0D2A7D3F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F07B01C-6631-4445-96F2-74F0D2A7D3F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F07B01C-6631-4445-96F2-74F0D2A7D3F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F07B01C-6631-4445-96F2-74F0D2A7D3F8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
