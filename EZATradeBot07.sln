@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35506.116 d17.12
+VisualStudioVersion = 17.12.35506.116
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EZATradeBot07.AppHost", "EZATradeBot07.AppHost\EZATradeBot07.AppHost.csproj", "{AD975F96-B882-4E68-9112-3D77486CBF21}"
 EndProject
@@ -11,6 +11,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EZATradeBot07.Web", "EZATradeBot07.Web\EZATradeBot07.Web.csproj", "{86CA86F4-C6FE-4A8A-AD99-834599AB3611}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EZATradeBot07.Tests", "EZATradeBot07.Tests\EZATradeBot07.Tests.csproj", "{9F07B01C-6631-4445-96F2-74F0D2A7D3F8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Library", "Library\Library.csproj", "{54F14124-4D3C-44CB-A259-78173CFD1CDA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,6 +40,10 @@ Global
 		{9F07B01C-6631-4445-96F2-74F0D2A7D3F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9F07B01C-6631-4445-96F2-74F0D2A7D3F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9F07B01C-6631-4445-96F2-74F0D2A7D3F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54F14124-4D3C-44CB-A259-78173CFD1CDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54F14124-4D3C-44CB-A259-78173CFD1CDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54F14124-4D3C-44CB-A259-78173CFD1CDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54F14124-4D3C-44CB-A259-78173CFD1CDA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
