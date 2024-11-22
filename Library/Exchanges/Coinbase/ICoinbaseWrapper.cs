@@ -4,6 +4,9 @@ using Coinbase.AdvancedTrade.Models;
 namespace EZATB07.Library.Exchanges.Coinbase;
 public interface ICoinbaseWrapper
 {
+
+    Task<OrderPreview> GetOrderPreviewAsync(string productId, OrderSide side, string baseSize, string limitPrice, bool postOnly);
+
     /// <summary>
     /// Creates a limit order with good-till-canceled (GTC) duration and optionally returns the full order details.
     /// </summary>

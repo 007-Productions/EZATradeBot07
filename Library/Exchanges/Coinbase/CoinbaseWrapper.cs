@@ -18,27 +18,63 @@ public class CoinbaseWrapper : ICoinbaseWrapper
         _webSocketManager = _coinbaseClient?.WebSocket;
     }
 
-    // Create limit buy order and retrieve order details
-    //Order order = await _coinbaseClient!.Orders.CreateLimitOrderGTCAsync(
-    //    productId: "BTC-USDC",
-    //    side: OrderSide.BUY,
-    //    baseSize: "0.0001",
-    //    limitPrice: "10000",
-    //    postOnly: true,
-    //    returnOrder: true
-    //);
+    public async Task<OrderPreview> GetOrderPreviewAsync(string productId, OrderSide side, string baseSize, string limitPrice, bool postOnly)
+    {
+        // Calculate the total price
+        decimal baseSizeDecimal = decimal.Parse(baseSize);
+        decimal limitPriceDecimal = decimal.Parse(limitPrice);
+        decimal totalPrice = baseSizeDecimal * limitPriceDecimal;
 
-    /// <summary>
-    /// Creates a limit order with good-till-canceled (GTC) duration and optionally returns the full order details.
-    /// </summary>
-    /// <param name="productId">Product ID for which the order is being placed.</param>
-    /// <param name="side">Side of the order (buy/sell).</param>
-    /// <param name="baseSize">Base size of the order.</param>
-    /// <param name="limitPrice">Limit price for the order.</param>
-    /// <param name="postOnly"> Indicates if the order should only be posted.</param>
-    /// <returns>A task representing the operation. The task result contains the order object if returnOrder is true. </returns>
+        // Determine the fee percentage
+        decimal feePercentage = postOnly ? 0.006m : 0.012m;
+        decimal fee = Math.Round(totalPrice * feePercentage, 6);
+        decimal totalPriceWithFee = totalPrice + fee;
+
+        // Simulate validation logic
+        bool isValid = true;
+        string message = "Order preview is valid.";
+
+        // Add your validation logic here
+        if (totalPrice <= 0)
+        {
+            isValid = false;
+            message = "Invalid total price.";
+        }
+
+        // Return the order preview
+        return await Task.FromResult(new OrderPreview
+        {
+            ProductId = productId,
+            Side = side,
+            BaseSize = baseSize,
+            LimitPrice = limitPrice,
+            PostOnly = postOnly,
+            TotalPrice = totalPrice,
+            Fee = fee,
+            TotalPriceWithFee = totalPriceWithFee,
+            IsValid = isValid,
+            Message = message
+        });
+    }
+
     public async Task<Order> CreateLimitOrderAsync(string productId, OrderSide side, string baseSize, string limitPrice, bool postOnly)
     {
         return await _coinbaseClient!.Orders.CreateLimitOrderGTCAsync(productId, side, baseSize, limitPrice, postOnly, true);
     }
+
+  
+}
+
+public class OrderPreview
+{
+    public string ProductId { get; set; }
+    public OrderSide Side { get; set; }
+    public string BaseSize { get; set; }
+    public string LimitPrice { get; set; }
+    public bool PostOnly { get; set; }
+    public decimal TotalPrice { get; set; }
+    public decimal Fee { get; set; }
+    public decimal TotalPriceWithFee { get; set; }
+    public bool IsValid { get; set; }
+    public string Message { get; set; }
 }
