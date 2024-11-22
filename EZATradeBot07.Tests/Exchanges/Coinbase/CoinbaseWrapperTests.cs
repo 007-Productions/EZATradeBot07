@@ -1,18 +1,18 @@
-﻿using Coinbase.AdvancedTrade;
-using Coinbase.AdvancedTrade.Enums;
+﻿using Coinbase.AdvancedTrade.Enums;
+using WebSocketManager = Coinbase.AdvancedTrade.WebSocketManager;
 
 namespace EZATB07.Library.Exchanges.Coinbase.Tests;
 public class CoinbaseWrapperTests : IClassFixture<CoinbaseWrapperTestFixture>
 {
     private readonly CoinbaseWrapperTestFixture _fixture;
     protected CoinbaseWrapper _coinbaseWrapper;
-    protected WebSocketManager? _webSocketManager;
+    protected WebSocketManager _webSocketManager;
 
     public CoinbaseWrapperTests(CoinbaseWrapperTestFixture fixture)
     {
         _fixture = fixture;
         _coinbaseWrapper = new CoinbaseWrapper(_fixture.ApiKey, _fixture.ApiSecret);
-    }
+    }    
 
     [Fact]
     public async Task GetOrderPreview()
@@ -26,6 +26,7 @@ public class CoinbaseWrapperTests : IClassFixture<CoinbaseWrapperTestFixture>
         var baseSize = "4";
         var limitPrice = "0.020027";
         var postOnly = true;
+        var orderId = "77f3f8f2-f24b-460f-a531-e835a55fe38b";
 
         var expectedTotalPrice = 0.080108m;
         var expectedFee = 0.000481m;
@@ -39,6 +40,9 @@ public class CoinbaseWrapperTests : IClassFixture<CoinbaseWrapperTestFixture>
         Assert.Equal(preview.TotalPrice, expectedTotalPrice);
         Assert.Equal(preview.Fee, expectedFee);
         Assert.Equal(preview.TotalPriceWithFee, expectedTotalPriceWithFee);
+
+        await _coinbaseWrapper.ConnectToWebSocket(new string[] { productId }, ChannelType.User, orderId);
+
     }
 
 

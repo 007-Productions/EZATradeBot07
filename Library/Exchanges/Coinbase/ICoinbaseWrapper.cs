@@ -4,7 +4,7 @@ using Coinbase.AdvancedTrade.Models;
 namespace EZATB07.Library.Exchanges.Coinbase;
 public interface ICoinbaseWrapper
 {
-
+    Task ConnectToWebSocket(string[] products, ChannelType channelType, string orderId);
     Task<OrderPreview> GetOrderPreviewAsync(string productId, OrderSide side, string baseSize, string limitPrice, bool postOnly);
 
     /// <summary>

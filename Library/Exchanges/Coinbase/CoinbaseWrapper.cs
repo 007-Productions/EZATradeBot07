@@ -1,6 +1,10 @@
 ﻿using Coinbase.AdvancedTrade;
 using Coinbase.AdvancedTrade.Enums;
 using Coinbase.AdvancedTrade.Models;
+using Coinbase.AdvancedTrade.Models.WebSocket;
+using EZATB07.Library.Exchanges.Coinbase.Models;
+using Newtonsoft.Json;
+using Org.BouncyCastle.Asn1.X509;
 
 namespace EZATB07.Library.Exchanges.Coinbase;
 
@@ -17,6 +21,46 @@ public class CoinbaseWrapper : ICoinbaseWrapper
         _coinbaseClient = new CoinbaseClient(CoinBase_Cloud_Trading_API_Key, CoinBase_Cloud_Trading_API_Secret);
         _webSocketManager = _coinbaseClient?.WebSocket;
     }
+
+    public async Task ConnectToWebSocket(string[] products, ChannelType channelType, string orderId)
+    {
+        if (_webSocketManager == null)
+        {
+            throw new InvalidOperationException("WebSocketManager is not initialized.");
+        }
+
+        await _webSocketManager.ConnectAsync();
+
+        await _webSocketManager.SubscribeAsync(products, channelType);
+
+        _webSocketManager!.UserMessageReceived += (sender, userData) =>
+        {
+            Console.WriteLine($"Received User data at {DateTime.UtcNow}");
+        };
+
+        _webSocketManager.MessageReceived += (sender, e) =>
+        {
+            Console.WriteLine($"Raw message received at {DateTime.UtcNow}: {e.StringData}");
+
+            var webSocketModel = JsonConvert.DeserializeObject<WebSocketModel>(e.StringData);
+
+            if (webSocketModel != null)
+            {
+                foreach (var evt in webSocketModel.events)
+                {
+                    foreach (var order in evt.orders)
+                    {
+                        if (order.order_id == orderId)
+                        {
+                            // Handle the order update
+                            Console.WriteLine($"Order {order.order_id} update received.");
+                        }
+                    }
+                }
+            }
+        };
+    }
+
 
     public async Task<OrderPreview> GetOrderPreviewAsync(string productId, OrderSide side, string baseSize, string limitPrice, bool postOnly)
     {
@@ -62,7 +106,28 @@ public class CoinbaseWrapper : ICoinbaseWrapper
         return await _coinbaseClient!.Orders.CreateLimitOrderGTCAsync(productId, side, baseSize, limitPrice, postOnly, true);
     }
 
-  
+    //public void SubscribeToOrderUpdates(string orderId, Action<Order> onOrderUpdate)
+    //{
+    //    _coinbaseClient
+
+    //    if (_webSocketManager == null)
+    //    {
+    //        throw new InvalidOperationException("WebSocketManager is not initialized.");
+    //    }
+
+    //    _webSocketManager.On
+
+    //   _webSocketManager += (sender, order) =>
+    //    {
+    //        if (order.OrderId == orderId)
+    //        {
+    //            onOrderUpdate(order);
+    //        }
+    //    };
+
+    //    _webSocketManager.Connect();
+    //}
+
 }
 
 public class OrderPreview
