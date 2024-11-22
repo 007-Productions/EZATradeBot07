@@ -12,8 +12,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EZATradeBot07.ApiService\EZATradeBot07.ApiService.csproj" />
-    <ProjectReference Include="..\EZATradeBot07.Web\EZATradeBot07.Web.csproj" />
+    <ProjectReference Include="..\EZATradeBot07.ApiService\EZATB07.ApiService.csproj" />
+    <ProjectReference Include="..\EZATradeBot07.Web\EZATB07.Web.csproj" />
   </ItemGroup>
 
   <ItemGroup>

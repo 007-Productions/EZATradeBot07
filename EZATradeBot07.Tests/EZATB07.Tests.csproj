@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EZATradeBot07.AppHost\EZATradeBot07.AppHost.csproj" />
+    <ProjectReference Include="..\EZATradeBot07.AppHost\EZATB07.AppHost.csproj" />
   </ItemGroup>
 
   <ItemGroup>

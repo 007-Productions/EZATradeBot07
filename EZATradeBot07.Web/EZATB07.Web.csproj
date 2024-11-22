@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EZATradeBot07.ServiceDefaults\EZATradeBot07.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\EZATradeBot07.ServiceDefaults\EZATB07.ServiceDefaults.csproj" />
   </ItemGroup>
 
   <ItemGroup>
