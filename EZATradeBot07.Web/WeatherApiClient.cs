@@ -1,4 +1,4 @@
-namespace EZATradeBot07.Web;
+namespace EZATB07.Web;
 
 public class WeatherApiClient(HttpClient httpClient)
 {

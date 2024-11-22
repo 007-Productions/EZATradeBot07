@@ -1,5 +1,5 @@
-using EZATradeBot07.Web;
-using EZATradeBot07.Web.Components;
+using EZATB07.Web;
+using EZATB07.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -2,9 +2,9 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 var cache = builder.AddRedis("cache");
 
-var apiService = builder.AddProject<Projects.EZATradeBot07_ApiService>("apiservice");
+var apiService = builder.AddProject<Projects.EZATB07_ApiService>("apiservice");
 
-builder.AddProject<Projects.EZATradeBot07_Web>("webfrontend")
+builder.AddProject<Projects.EZATB07_Web>("webfrontend")
     .WithExternalHttpEndpoints()
     .WithReference(cache)
     .WaitFor(cache)
