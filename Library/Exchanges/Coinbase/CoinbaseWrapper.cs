@@ -22,6 +22,23 @@ public class CoinbaseWrapper : ICoinbaseWrapper
         _webSocketManager = _coinbaseClient?.WebSocket;
     }
 
+    public Task<List<ProductBook>> GetBestBidAskAsync(List<string> productIds)
+    {
+        return _coinbaseClient!.Products.GetBestBidAskAsync(productIds);
+    }
+
+
+    public Task<List<Order>> GetAllOrders()
+    {
+        return _coinbaseClient!.Orders.ListOrdersAsync();
+    }
+
+    public async Task<Order> GetOrderAsync(string order_id)
+    {
+       return await _coinbaseClient!.Orders.GetOrderAsync(order_id);
+    }
+
+
     public async Task ConnectToWebSocket(string[] products, ChannelType channelType, string orderId)
     {
         if (_webSocketManager == null)
