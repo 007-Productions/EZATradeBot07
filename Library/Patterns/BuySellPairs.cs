@@ -1,8 +1,6 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using EZATB07.Library.Exchanges.Coinbase;
 using Coinbase.AdvancedTrade.Enums;
+using Coinbase.AdvancedTrade.Models;
+using EZATB07.Library.Exchanges.Coinbase;
 
 public class BuySellPairs
 {
@@ -73,6 +71,7 @@ public class BuySellPairs
         while (true)
         {
             var order = await _coinbaseWrapper.GetOrderAsync(orderId);
+
             if (order.Status == "FILLED")
             {
                 return order;

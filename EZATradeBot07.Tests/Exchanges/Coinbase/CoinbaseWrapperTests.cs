@@ -22,7 +22,7 @@ public class CoinbaseWrapperTests : IClassFixture<CoinbaseWrapperTestFixture>
     public async Task GetFilledBuyOrderToPlaceNewSellOrderPair()
     {
         var tradingBot = new BuySellPairs(_coinbaseWrapper, _logger);
-        await tradingBot.MonitorAndTradeAsync("DEGEN-USDC", 1, 5);
+        await tradingBot.MonitorAndTradeAsync("DEGEN-USDC", 0.1M, 0.5M);
     }
 
     [Fact]

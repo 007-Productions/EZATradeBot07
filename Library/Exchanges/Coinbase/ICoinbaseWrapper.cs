@@ -4,6 +4,7 @@ using Coinbase.AdvancedTrade.Models;
 namespace EZATB07.Library.Exchanges.Coinbase;
 public interface ICoinbaseWrapper
 {
+    Task<Order> GetOrderAsync(string order_id);
     Task<List<ProductBook>> GetBestBidAskAsync(List<string> productIds);
     Task<List<Order>> GetAllOrders();
     Task ConnectToWebSocket(string[] products, ChannelType channelType, string orderId);
