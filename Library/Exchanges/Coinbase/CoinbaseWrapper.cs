@@ -27,10 +27,27 @@ public class CoinbaseWrapper : ICoinbaseWrapper
                                              OrderType? orderType = null, OrderSide? orderSide = null) => 
         _coinbaseClient!.Orders.ListOrdersAsync(productId, orderStatus, startDate, endDate, orderType, orderSide);
 
-    public async Task<decimal> GetLowestBuyOrderPrice(string productId) =>
-         decimal.TryParse((await _coinbaseClient!.Orders!.ListOrdersAsync(productId: productId, orderSide: OrderSide.BUY))
-        .Where(o => o.Status == "FILLED" || o.Status == "OPEN")
-        .MinBy(o => decimal.Parse(o.AverageFilledPrice))?.AverageFilledPrice, out var result) ? result : 0m;
+    public async Task<decimal> GetLowestBuyOrderPrice(string productId)
+    {
+        var orders = await _coinbaseClient!.Orders!.ListOrdersAsync(productId: productId, orderSide: OrderSide.BUY);
+        var relevantOrders = orders.Where(o => o.Status == "FILLED" || o.Status == "OPEN");
+
+        if (!relevantOrders.Any())
+        {
+            Console.WriteLine("No relevant orders found.");
+            return 0m;
+        }
+
+        var lowestOrder = relevantOrders.MinBy(o => decimal.Parse(o.OrderConfiguration.LimitGtc.LimitPrice));
+
+        if (lowestOrder == null || !decimal.TryParse(lowestOrder.OrderConfiguration.LimitGtc.LimitPrice, out var result))
+        {
+            Console.WriteLine("Failed to parse the lowest order price.");
+            return 0m;
+        }
+
+        return result;
+    }
 
     public async Task<decimal> GetBestCurrentBidPrice(string productId) =>
         (await _coinbaseClient!.Products.GetBestBidAskAsync(new List<string> { productId }))

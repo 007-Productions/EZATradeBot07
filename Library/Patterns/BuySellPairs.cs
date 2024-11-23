@@ -35,8 +35,6 @@ public class BuySellPairs(ICoinbaseWrapper coinbaseWrapper, ILogger<BuySellPairs
         return true;
     }
 
-
-
     public async Task<Order> BuyAsync(string productId, decimal buyMarkDownPercentage, string baseSize)
     {
         var account = await ValidateAccounts(productId);
