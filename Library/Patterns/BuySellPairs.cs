@@ -1,48 +1,71 @@
 using Coinbase.AdvancedTrade.Enums;
 using Coinbase.AdvancedTrade.Models;
+using Coinbase.AdvancedTrade.Models.WebSocket;
 using EZATB07.Library.Exchanges.Coinbase;
+using Microsoft.Extensions.Logging;
 
-public class BuySellPairs
+public class BuySellPairs(ICoinbaseWrapper coinbaseWrapper, ILogger<BuySellPairs> logger)
 {
-    private readonly ICoinbaseWrapper _coinbaseWrapper;
-    private readonly Logger _logger;
-
-    public BuySellPairs(ICoinbaseWrapper coinbaseWrapper, Logger logger)
+    public async Task<Order> BuyAsync(string productId, decimal buyMarkDownPercentage, string baseSize)
     {
-        _coinbaseWrapper = coinbaseWrapper;
-        _logger = logger;
+        var account = await ValidateAccounts(productId);
+
+        if (account.Status == "Error") { return account; }
+
+        var payingAccountBalance = decimal.Parse(account.OutstandingHoldAmount);
+
+        var newBuyOrderPriceWithMarkDown = Math.Round(Math.Min(await coinbaseWrapper.GetLowestBuyOrderPrice(productId),
+                                                               await coinbaseWrapper.GetBestCurrentBidPrice(productId))
+                                                               * (1 - buyMarkDownPercentage / 100), 6).ToString();
+
+        logger.LogInformation($"New Buy Order Price With MarkDown:{newBuyOrderPriceWithMarkDown}", newBuyOrderPriceWithMarkDown);
+
+        var orderPreview = await coinbaseWrapper.GetOrderPreviewAsync(productId, OrderSide.BUY, baseSize, newBuyOrderPriceWithMarkDown, true);
+
+        if(orderPreview.TotalPriceWithFee >= payingAccountBalance)
+        {
+            var errorMessage = $"Order Price:{orderPreview.TotalPriceWithFee} is more than the Available Balance:{payingAccountBalance}!";
+            
+            logger.LogWarning(errorMessage);
+
+            return new Order() { Status = "Error", RejectMessage = errorMessage };
+        }
+
+        try
+        {
+            var buyOrder = await coinbaseWrapper.CreateLimitOrderAsync(productId, OrderSide.BUY, baseSize,
+                                                                       newBuyOrderPriceWithMarkDown, true);
+
+            logger.LogInformation("Placed Buy order at {UtcNow}: ProductId:{productId} BaseSize:{baseSize}  Total Order Price:{AverageFilledPrice}", DateTime.UtcNow, productId, baseSize, buyOrder.OutstandingHoldAmount);
+
+            return buyOrder;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "An error occurred while placing a buy order.");
+            return new Order() {  Status= "Error", RejectMessage = ex.Message };
+        }
     }
 
     public async Task MonitorAndTradeAsync(string productId, decimal buyPercentage, decimal sellPercentage)
     {
         while (true)
         {
-            // Get the best bid price
-            var bestBidAsk = await _coinbaseWrapper.GetBestBidAskAsync(new List<string> { productId });
-            var bestBidPrice = bestBidAsk.FirstOrDefault()?.Bids.FirstOrDefault()?.Price;
+            var bestBidPriceDecimal = await coinbaseWrapper.GetBestCurrentBidPrice(productId);
 
-            // Ensure there is a best bid price
-            if (bestBidPrice == null)
-            {
-                _logger.Log("No best bid price available.");
-                await Task.Delay(10000); // Wait for 10 seconds before retrying
-                continue;
-            }
-
-            var bestBidPriceDecimal = decimal.Parse(bestBidPrice);
 
             // Calculate the buy price with the specified percentage
             var buyPrice = Math.Round(bestBidPriceDecimal * (1 - buyPercentage / 100), 6);
 
             // Place a buy order
-            var buyOrder = await _coinbaseWrapper.CreateLimitOrderAsync(productId, OrderSide.BUY, "1", buyPrice.ToString(), true);
-            _logger.Log($"Placed buy order at {buyPrice}");
+            var buyOrder = await coinbaseWrapper.CreateLimitOrderAsync(productId, OrderSide.BUY, "1", buyPrice.ToString(), true);
+            logger.LogInformation($"Placed buy order at {buyPrice}");
 
             // Wait for the buy order to be filled
             var filledBuyOrder = await WaitForOrderToBeFilledAsync(buyOrder.OrderId);
             if (filledBuyOrder == null)
             {
-                _logger.Log("Buy order was not filled.");
+                logger.LogInformation("Buy order was not filled.");
                 continue;
             }
 
@@ -51,26 +74,69 @@ public class BuySellPairs
             var sellPrice = Math.Round(buyTotalValueAfterFees * (1 + sellPercentage / 100), 6);
 
             // Place a sell order
-            var sellOrder = await _coinbaseWrapper.CreateLimitOrderAsync(productId, OrderSide.SELL, filledBuyOrder.FilledSize, sellPrice.ToString(), true);
-            _logger.Log($"Placed sell order at {sellPrice}");
+            var sellOrder = await coinbaseWrapper.CreateLimitOrderAsync(productId, OrderSide.SELL, filledBuyOrder.FilledSize, sellPrice.ToString(), true);
+            logger.LogInformation($"Placed sell order at {sellPrice}");
 
             // Wait for the sell order to be filled
             var filledSellOrder = await WaitForOrderToBeFilledAsync(sellOrder.OrderId);
             if (filledSellOrder == null)
             {
-                _logger.Log("Sell order was not filled.");
+                logger.LogInformation("Sell order was not filled.");
                 continue;
             }
 
-            _logger.Log("Trade completed successfully.");
+            logger.LogInformation("Trade completed successfully.");
         }
+    }
+
+    private async Task<Order> ValidateAccounts(string productId)
+    {
+        var currencies = productId.Split('-');
+
+        if (currencies.Length != 2)
+        {
+            return new Order() { Status = "Error", RejectMessage = "Invalid productId format. Expected format: 'BUYING-PAYING'" };
+        }
+
+        var buyingCurrency = currencies[0];
+        var payingCurrency = currencies[1];
+
+
+        var payingAccount = (await coinbaseWrapper.ListAccounts()).FirstOrDefault(a => a.Currency == payingCurrency);
+
+        if (payingAccount == null)
+        {
+            return new Order() { Status = "Error", RejectMessage = $"No account found for Paying Account:{payingCurrency}" };
+        }
+
+        var payingAccountBalance = decimal.Parse(payingAccount.AvailableBalance.Value);
+
+        if (payingAccountBalance <= 0)
+        {
+            var errorMessage = $"No {payingCurrency} balance available!";
+            logger.LogWarning(errorMessage);
+            return new Order() { Status = "Error", RejectMessage = errorMessage };
+        }
+
+        var buyingAccount = (await coinbaseWrapper.ListAccounts()).FirstOrDefault(a => a.Currency == buyingCurrency);
+
+        if (buyingAccount == null)
+        {
+            return new Order() { Status = "Error", RejectMessage = $"No account found for currency: {buyingCurrency}" };
+        }
+
+        logger.LogInformation($"Currency:{payingAccountBalance} Available Balance: {payingAccountBalance}");
+
+        logger.LogInformation($"Currency:{buyingAccount.Currency} Available Balance: {buyingAccount.AvailableBalance.Value}, Hold: {buyingAccount.Hold.Value}");
+
+        return new Order() { Status = "Valid", OutstandingHoldAmount = payingAccount.AvailableBalance.Value };
     }
 
     private async Task<Order> WaitForOrderToBeFilledAsync(string orderId)
     {
         while (true)
         {
-            var order = await _coinbaseWrapper.GetOrderAsync(orderId);
+            var order = await coinbaseWrapper.GetOrderAsync(orderId);
 
             if (order.Status == "FILLED")
             {

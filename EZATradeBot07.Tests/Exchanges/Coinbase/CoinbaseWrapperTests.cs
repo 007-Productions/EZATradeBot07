@@ -1,29 +1,26 @@
 ﻿using Xunit;
 using EZATB07.Library.Exchanges.Coinbase;
 using Coinbase.AdvancedTrade.Enums;
-using WebSocketManager = Coinbase.AdvancedTrade.WebSocketManager;
 
 namespace EZATB07.Library.Exchanges.Coinbase.Tests;
 public class CoinbaseWrapperTests : IClassFixture<CoinbaseWrapperTestFixture>
 {
     private readonly CoinbaseWrapperTestFixture _fixture;
     protected CoinbaseWrapper _coinbaseWrapper;
-    protected WebSocketManager _webSocketManager;
-    private readonly Logger _logger;
+
 
     public CoinbaseWrapperTests(CoinbaseWrapperTestFixture fixture)
     {
         _fixture = fixture;
         _coinbaseWrapper = new CoinbaseWrapper(_fixture.ApiKey, _fixture.ApiSecret);
-        _logger = new Logger("log.json");
     }
 
     [Fact()]
-    public async Task GetFilledBuyOrderToPlaceNewSellOrderPair()
+    public async Task ListAccountsAsyncTest()
     {
-        var tradingBot = new BuySellPairs(_coinbaseWrapper, _logger);
-        await tradingBot.MonitorAndTradeAsync("DEGEN-USDC", 0.1M, 0.5M);
+        var accounts = await _coinbaseWrapper.ListAccounts();
     }
+
 
     [Fact]
     public async Task GetOrderPreview()
@@ -78,4 +75,6 @@ public class CoinbaseWrapperTests : IClassFixture<CoinbaseWrapperTestFixture>
 
         Assert.NotNull(result);
     }
+
+    
 }

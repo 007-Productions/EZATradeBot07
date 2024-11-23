@@ -1,10 +1,8 @@
 ﻿using Coinbase.AdvancedTrade;
 using Coinbase.AdvancedTrade.Enums;
 using Coinbase.AdvancedTrade.Models;
-using Coinbase.AdvancedTrade.Models.WebSocket;
 using EZATB07.Library.Exchanges.Coinbase.Models;
 using Newtonsoft.Json;
-using Org.BouncyCastle.Asn1.X509;
 
 namespace EZATB07.Library.Exchanges.Coinbase;
 
@@ -22,21 +20,28 @@ public class CoinbaseWrapper : ICoinbaseWrapper
         _webSocketManager = _coinbaseClient?.WebSocket;
     }
 
-    public Task<List<ProductBook>> GetBestBidAskAsync(List<string> productIds)
-    {
-        return _coinbaseClient!.Products.GetBestBidAskAsync(productIds);
-    }
+    public Task<List<Account>> ListAccounts(int limit = 49, string? cursor = null) => _coinbaseClient!.Accounts.ListAccountsAsync(limit, cursor);
+   
+    public Task<List<Order>> ListOrders(string? productId = null, OrderStatus[]? orderStatus = null, DateTime? 
+                                             startDate = null, DateTime? endDate = null, 
+                                             OrderType? orderType = null, OrderSide? orderSide = null) => 
+        _coinbaseClient!.Orders.ListOrdersAsync(productId, orderStatus, startDate, endDate, orderType, orderSide);
 
+    public async Task<decimal> GetLowestBuyOrderPrice(string productId) =>
+         decimal.TryParse((await _coinbaseClient!.Orders!.ListOrdersAsync(productId: productId, orderSide: OrderSide.BUY))
+        .Where(o => o.Status == "FILLED")
+        .MinBy(o => decimal.Parse(o.AverageFilledPrice))?.AverageFilledPrice, out var result) ? result : 0m;
 
-    public Task<List<Order>> GetAllOrders()
-    {
-        return _coinbaseClient!.Orders.ListOrdersAsync();
-    }
-
-    public async Task<Order> GetOrderAsync(string order_id)
-    {
-       return await _coinbaseClient!.Orders.GetOrderAsync(order_id);
-    }
+    public async Task<decimal> GetBestCurrentBidPrice(string productId) =>
+        (await _coinbaseClient!.Products.GetBestBidAskAsync(new List<string> { productId }))
+        .FirstOrDefault()?.Bids.FirstOrDefault()?.Price is string bestBidPrice
+        ? decimal.Parse(bestBidPrice)
+        : throw new InvalidOperationException("No best bid price available.");
+    
+    public Task<List<ProductBook>> GetBestBidAskAsync(List<string> productIds) =>_coinbaseClient!.Products.GetBestBidAskAsync(productIds);
+    public Task<List<Order>> GetAllOrders() => _coinbaseClient!.Orders.ListOrdersAsync();
+    public async Task<Order> GetOrderAsync(string order_id) => await _coinbaseClient!.Orders.GetOrderAsync(order_id);
+    
 
 
     public async Task ConnectToWebSocket(string[] products, ChannelType channelType, string orderId)
@@ -120,8 +125,27 @@ public class CoinbaseWrapper : ICoinbaseWrapper
 
     public async Task<Order> CreateLimitOrderAsync(string productId, OrderSide side, string baseSize, string limitPrice, bool postOnly)
     {
+        // Parse the limitPrice to a decimal
+        if (decimal.TryParse(limitPrice, out var limitPriceDecimal))
+        {
+            // Check if the limitPrice has more than 6 decimal places
+            if (decimal.Round(limitPriceDecimal, 6) != limitPriceDecimal)
+            {
+                // Round to 6 decimal places
+                limitPriceDecimal = Math.Round(limitPriceDecimal, 6);
+
+                // Convert back to string
+                limitPrice = limitPriceDecimal.ToString("F6");
+            }
+        }
+        else
+        {
+            throw new ArgumentException("Invalid limit price format", nameof(limitPrice));
+        }
+
         return await _coinbaseClient!.Orders.CreateLimitOrderGTCAsync(productId, side, baseSize, limitPrice, postOnly, true);
     }
+
 
     //public void SubscribeToOrderUpdates(string orderId, Action<Order> onOrderUpdate)
     //{
