@@ -76,5 +76,27 @@ public class CoinbaseWrapperTests : IClassFixture<CoinbaseWrapperTestFixture>
         Assert.NotNull(result);
     }
 
-    
+    [Fact()]
+    public async Task GetLowestBuyOrderPriceTestAsync()
+    {
+        var productId = "DEGEN-USDC";
+
+        var result = await _coinbaseWrapper.GetLowestBuyOrderPrice(productId);
+        Assert.True(result > 0);
+
+    }
+
+    [Fact()]
+    public async Task GetBestCurrentBidPriceTestAsync()
+    {
+        var result = await _coinbaseWrapper.GetBestCurrentBidPrice("DEGEN-USDC");
+    }
+
+    [Fact()]
+    public async Task GetLowestBuyOrderPriceTest()
+    {
+        var result = await _coinbaseWrapper.GetLowestBuyOrderPrice("DEGEN-USDC");
+
+        Assert.True(result > 0);
+    }
 }

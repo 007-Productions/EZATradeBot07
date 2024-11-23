@@ -29,7 +29,7 @@ public class CoinbaseWrapper : ICoinbaseWrapper
 
     public async Task<decimal> GetLowestBuyOrderPrice(string productId) =>
          decimal.TryParse((await _coinbaseClient!.Orders!.ListOrdersAsync(productId: productId, orderSide: OrderSide.BUY))
-        .Where(o => o.Status == "FILLED")
+        .Where(o => o.Status == "FILLED" || o.Status == "OPEN")
         .MinBy(o => decimal.Parse(o.AverageFilledPrice))?.AverageFilledPrice, out var result) ? result : 0m;
 
     public async Task<decimal> GetBestCurrentBidPrice(string productId) =>
@@ -143,7 +143,16 @@ public class CoinbaseWrapper : ICoinbaseWrapper
             throw new ArgumentException("Invalid limit price format", nameof(limitPrice));
         }
 
-        return await _coinbaseClient!.Orders.CreateLimitOrderGTCAsync(productId, side, baseSize, limitPrice, postOnly, true);
+        try
+        {
+            return await _coinbaseClient!.Orders.CreateLimitOrderGTCAsync(productId, side, baseSize, limitPrice, postOnly, true);
+        }
+        catch (Exception ex)
+        {
+
+            throw;
+        }
+
     }
 
 
