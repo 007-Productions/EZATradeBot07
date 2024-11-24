@@ -11,7 +11,7 @@ public class CoinBaseService(ICoinbaseWrapper coinbaseWrapper, ILogger<CoinBaseS
     {
         var account = await ValidateBuyPayAccounts(productId);
 
-        if (account.Status == Status.Error) { return CreateOrderErrorResult(account.Message, account.IsRetryable);  }
+        if (account.Status == Status.Error) { return CreateOrderErrorResult(account.Message, null, account.IsRetryable);  }
 
         var payingAccountBalance = decimal.Parse(account.PayingAccount.AvailableBalance.Value);
 
@@ -22,18 +22,14 @@ public class CoinBaseService(ICoinbaseWrapper coinbaseWrapper, ILogger<CoinBaseS
 
         if (newBuyOrderPriceWithMarkDown <= 0)
         {
-            var errorMessage = "Calculated buy order price with markdown is less than or equal to zero!";
-            logger.LogWarning(errorMessage);
-            return CreateOrderErrorResult(errorMessage);
+            return CreateOrderErrorResult("Calculated buy order price with markdown is less than or equal to zero!");
         }
 
         var orderPreview = await coinbaseWrapper.GetOrderPreviewAsync(productId, OrderSide.BUY, baseSize, newBuyOrderPriceWithMarkDown.ToString(), true);
 
         if (orderPreview.TotalPriceWithFee >= payingAccountBalance)
         {
-            var errorMessage = $"Order Price:{orderPreview.TotalPriceWithFee} is more than the Available Balance:{payingAccountBalance}!";
-            logger.LogWarning(errorMessage);
-            return CreateOrderErrorResult(errorMessage);
+            return CreateOrderErrorResult($"Order Price:{orderPreview.TotalPriceWithFee} is more than the Available Balance:{payingAccountBalance}!");
         }
 
         try
@@ -46,8 +42,7 @@ public class CoinBaseService(ICoinbaseWrapper coinbaseWrapper, ILogger<CoinBaseS
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An error occurred while placing a buy order.");
-            return CreateOrderErrorResult(ex.Message);
+           return CreateOrderErrorResult($"An error occurred while placing a buy order! Error:{ex.Message}", ex);
         }
     }
     
@@ -90,9 +85,15 @@ public class CoinBaseService(ICoinbaseWrapper coinbaseWrapper, ILogger<CoinBaseS
 
         return new ResultDTO() { Status = Status.Valid, BuyingAccount = buyingAccount, PayingAccount = payingAccount };
     }
-    private ResultDTO CreateAccountErrorResult(string errorMessage, bool? isRetryable = false) => new ResultDTO(errorMessage, isRetryable);
-    private ResultDTO<Order> CreateOrderErrorResult(string? message, bool? isRetryable = false)
+    
+    private ResultDTO CreateAccountErrorResult(string errorMessage, Exception? ex = null, bool? isRetryable = false)
     {
-        return new ResultDTO<Order> {  IsRetryable = isRetryable, Status = Status.Error, Message = message };
+        logger.LogError(ex, errorMessage);
+        return new ResultDTO(errorMessage, isRetryable);
+    }
+    private ResultDTO<Order> CreateOrderErrorResult(string? errorMessage, Exception? ex = null, bool? isRetryable = false)
+    {
+        logger.LogError(ex, errorMessage);
+        return new ResultDTO<Order> {  IsRetryable = isRetryable, Status = Status.Error, Message = errorMessage };
     }
 }
