@@ -5,5 +5,8 @@ namespace EZATB07.Library.Exchanges.Coinbase;
 
 public interface ICoinBaseService
 {
-    Task<ResultDTO<Order>> Buy(string productId, decimal buyMarkDownPercentage, string baseSize);
+    Task<ResultDTO> ValidateBuyPayAccounts(string productId);
+    Task<ResultDTO<Order>> Buy(ResultDTO accounts, string productId, decimal buyMarkDownPercentage, string baseSize);
+    ResultDTO CreateAccountErrorResult(string errorMessage, Exception? ex = null, bool? isRetryable = false);
+    ResultDTO<Order> CreateOrderErrorResult(string? errorMessage, Exception? ex = null, bool? isRetryable = false);
 }

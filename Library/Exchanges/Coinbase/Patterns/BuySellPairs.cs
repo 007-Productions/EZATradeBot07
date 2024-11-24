@@ -1,5 +1,6 @@
 using Coinbase.AdvancedTrade.Enums;
 using Coinbase.AdvancedTrade.Models;
+using EZATB07.Library.Exchanges.Coinbase.Models;
 using Microsoft.Extensions.Logging;
 
 namespace EZATB07.Library.Exchanges.Coinbase.Patterns;
@@ -7,20 +8,20 @@ namespace EZATB07.Library.Exchanges.Coinbase.Patterns;
 //ToDo:kbdavis07:Need to eventually remove the ICoinbaseWrapper coinbaseWrapper from BuySellPairs class.
 public class BuySellPairs(ICoinBaseService coinBaseService, ICoinbaseWrapper coinbaseWrapper, ILogger<BuySellPairs> logger)
 {
-    public async Task<bool> BuyLoopTillFundsRunOut(string productId, string baseSize, decimal startBuyMarkDownPercentage)
+    public async Task<ResultDTO<Order>> BuyLoopTillFundsRunOut(string productId, string baseSize, decimal startBuyMarkDownPercentage)
     {
-        var account = await coinBaseService.ValidateAccounts(productId);
+        var accounts = await coinBaseService.ValidateBuyPayAccounts(productId);
 
-        if (account.Status == "Error") { return false; }
+        if (accounts.Status == Status.Error) { return new ResultDTO<Order> { Status = accounts.Status, Message = accounts.Message, IsRetryable = accounts.IsRetryable }; }
 
-        var payingAccountBalance = decimal.Parse(account.OutstandingHoldAmount);
+        var payingAccountBalance = decimal.Parse(accounts.PayingAccount.AvailableBalance.Value);
         var buyMarkDownPercentage = startBuyMarkDownPercentage;
 
         do
         {
             logger.LogInformation("buyMarkDownPercentage: {buyMarkDownPercentage}", buyMarkDownPercentage);
 
-            var buyResult = await coinBaseService.Buy(productId, buyMarkDownPercentage, baseSize);
+            var buyResult = await coinBaseService.Buy(accounts, productId, buyMarkDownPercentage, baseSize);
 
             if (buyResult.Status == "Error")
             {

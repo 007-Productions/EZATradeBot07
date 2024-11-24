@@ -7,13 +7,9 @@ namespace EZATB07.Library.Exchanges.Coinbase;
 
 public class CoinBaseService(ICoinbaseWrapper coinbaseWrapper, ILogger<CoinBaseService> logger) : ICoinBaseService
 {
-    public async Task<ResultDTO<Order>> Buy(string productId, decimal buyMarkDownPercentage, string baseSize)
+    public async Task<ResultDTO<Order>> Buy(ResultDTO accounts, string productId, decimal buyMarkDownPercentage, string baseSize)
     {
-        var account = await ValidateBuyPayAccounts(productId);
-
-        if (account.Status == Status.Error) { return CreateOrderErrorResult(account.Message, null, account.IsRetryable);  }
-
-        var payingAccountBalance = decimal.Parse(account.PayingAccount.AvailableBalance.Value);
+        var payingAccountBalance = decimal.Parse(accounts.PayingAccount.AvailableBalance.Value);
 
         var lowestBuyOrderPrice = await coinbaseWrapper.GetLowestBuyOrderPrice(productId);
         var bestCurrentBidPrice = await coinbaseWrapper.GetBestCurrentBidPrice(productId);
@@ -46,7 +42,7 @@ public class CoinBaseService(ICoinbaseWrapper coinbaseWrapper, ILogger<CoinBaseS
         }
     }
     
-    private async Task<ResultDTO> ValidateBuyPayAccounts(string productId)
+    public async Task<ResultDTO> ValidateBuyPayAccounts(string productId)
     {
         var currencies = productId.Split('-');
 
@@ -86,12 +82,12 @@ public class CoinBaseService(ICoinbaseWrapper coinbaseWrapper, ILogger<CoinBaseS
         return new ResultDTO() { Status = Status.Valid, BuyingAccount = buyingAccount, PayingAccount = payingAccount };
     }
     
-    private ResultDTO CreateAccountErrorResult(string errorMessage, Exception? ex = null, bool? isRetryable = false)
+    public ResultDTO CreateAccountErrorResult(string errorMessage, Exception? ex = null, bool? isRetryable = false)
     {
         logger.LogError(ex, errorMessage);
         return new ResultDTO(errorMessage, isRetryable);
     }
-    private ResultDTO<Order> CreateOrderErrorResult(string? errorMessage, Exception? ex = null, bool? isRetryable = false)
+    public ResultDTO<Order> CreateOrderErrorResult(string? errorMessage, Exception? ex = null, bool? isRetryable = false)
     {
         logger.LogError(ex, errorMessage);
         return new ResultDTO<Order> {  IsRetryable = isRetryable, Status = Status.Error, Message = errorMessage };
