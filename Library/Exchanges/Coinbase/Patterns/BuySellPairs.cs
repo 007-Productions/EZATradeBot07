@@ -23,19 +23,16 @@ public class BuySellPairs(ICoinBaseService coinBaseService, ICoinbaseWrapper coi
 
             var buyResult = await coinBaseService.Buy(accounts, productId, buyMarkDownPercentage, baseSize);
 
-            if (buyResult.Status == "Error")
-            {
-                return false;
-            }
-
-            payingAccountBalance -= decimal.Parse(buyResult.OutstandingHoldAmount);
+            if (buyResult.Status == Status.Error) { return buyResult; }
+            
+            payingAccountBalance -= decimal.Parse(buyResult?.Data?.OutstandingHoldAmount ?? "0");
             buyMarkDownPercentage += 0.001m;
 
             logger.LogInformation("Remaining Balance: {payingAccountBalance}", payingAccountBalance);
 
         } while (payingAccountBalance > 0);
 
-        return true;
+        return new ResultDTO<Order>();
     }
     public async Task MonitorAndTradeAsync(string productId, decimal buyPercentage, decimal sellPercentage)
     {

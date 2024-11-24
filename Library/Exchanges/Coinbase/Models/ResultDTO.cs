@@ -33,6 +33,13 @@ public class ResultDTO<T>
     public T? Data { get; set; }
     public Account? PayingAccount { get; set; }
     public Account? BuyingAccount { get; set; }
+
+    //Default: Success Constructor
+    public ResultDTO()
+    {
+        Status = Status.Success;
+    }
+
 }
 
 public enum Status

@@ -32,8 +32,14 @@ public class CoinBaseService(ICoinbaseWrapper coinbaseWrapper, ILogger<CoinBaseS
         {
             var buyOrder = await coinbaseWrapper.CreateLimitOrderAsync(productId, OrderSide.BUY, baseSize, newBuyOrderPriceWithMarkDown.ToString(), true);
 
-            logger.LogInformation("Placed Buy order at {UtcNow}: ProductId:{productId} BaseSize:{baseSize}  Total Order Price:{AverageFilledPrice}", DateTime.UtcNow, productId, baseSize, buyOrder.OutstandingHoldAmount);
-            
+            if(buyOrder.Status == "ERROR")
+            {
+                return CreateOrderErrorResult($"Failed to place buy order! Error:{buyOrder.RejectMessage}");
+            }
+
+            OrderSuccessResult(productId, baseSize, buyOrder);
+
+
             return new ResultDTO<Order>() { Data = buyOrder};
         }
         catch (Exception ex)
@@ -91,5 +97,10 @@ public class CoinBaseService(ICoinbaseWrapper coinbaseWrapper, ILogger<CoinBaseS
     {
         logger.LogError(ex, errorMessage);
         return new ResultDTO<Order> {  IsRetryable = isRetryable, Status = Status.Error, Message = errorMessage };
+    }
+
+    private void OrderSuccessResult(string productId, string baseSize, Order buyOrder)
+    {
+        logger.LogInformation("Placed Buy Order at {UtcNow} => OrderId:{OrderId} ProductId:{productId} BaseSize:{baseSize} Limit Price:{AverageFilledPrice}  Total Order Price:{OutstandingHoldAmount}", buyOrder.OrderId, DateTime.UtcNow, productId, baseSize, buyOrder.OrderConfiguration.LimitGtc.LimitPrice, buyOrder.OutstandingHoldAmount);
     }
 }
