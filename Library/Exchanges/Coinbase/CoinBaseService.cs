@@ -47,8 +47,18 @@ public class CoinBaseService(ICoinbaseWrapper coinbaseWrapper, ILogger<CoinBaseS
            return CreateOrderErrorResult($"An error occurred while placing a buy order! Error:{ex.Message}", ex);
         }
     }
-    
-    public async Task<ResultDTO> ValidateBuyPayAccounts(string productId)
+
+    // GetBestBidAskAsync
+    public async Task<ResultDTO<decimal>> Sell(ResultDTO accounts, string productId, decimal buyMarkDownPercentage, string baseSize)
+    {
+        var bestBidAsk = await coinbaseWrapper.GetBestBidAskAsync(new List<string> { productId });
+
+        var bestAskPrice = decimal.Parse(bestBidAsk.FirstOrDefault()?.Asks.FirstOrDefault()?.Price ?? "0");
+
+        // Rest of the method implementation
+    }
+
+    public async Task<ResultDTO> ValidateBuyPayAccounts(string productId, string? side = "buy")
     {
         var currencies = productId.Split('-');
 
@@ -65,29 +75,38 @@ public class CoinBaseService(ICoinbaseWrapper coinbaseWrapper, ILogger<CoinBaseS
         var payingAccount = accounts.FirstOrDefault(a => a.Currency == payingCurrency);
         var buyingAccount = accounts.FirstOrDefault(a => a.Currency == buyingCurrency);
 
-        if (payingAccount == null)
+        if (buyingAccount == null || payingAccount == null)
         {
-            return CreateAccountErrorResult($"No account found for Paying Account:{payingCurrency}");
+            return CreateAccountErrorResult($"No account found for Wallet:{buyingCurrency}");
         }
 
         var payingAccountBalance = decimal.Parse(payingAccount.AvailableBalance.Value);
+        var buyingAccountBalance = decimal.Parse(buyingAccount?.AvailableBalance?.Value ?? "0");
 
-        if (payingAccountBalance <= 0)
+        if (side == "sell" && buyingAccountBalance <= 0)
         {
-            return CreateAccountErrorResult($"Type:Zero Balance Paying Account:{payingCurrency} Balance:{payingAccountBalance}!");
+            return CreateAccountErrorResult($"Type:Zero Balance =>  There are no {payingCurrency} avaiable to sell => Balance:{buyingAccountBalance}!");
         }
 
-        if (buyingAccount == null)
+        if (side == "buy" && payingAccountBalance <= 0)
         {
-            return CreateAccountErrorResult($"No account found for currency: {buyingCurrency}");
+            return CreateAccountErrorResult($"Type:Zero Balance => There are no {payingCurrency} avaiable to buy with => Balance:{payingAccountBalance}!");
         }
 
-        logger.LogInformation($"Paying with Currency:{payingCurrency} Available Balance: {payingAccountBalance}");
-        logger.LogInformation($"Buying Currency:{buyingAccount.Currency} Available Balance: {buyingAccount.AvailableBalance.Value}, Hold: {buyingAccount.Hold.Value}");
+        if (side == "buy")
+        {
+            logger.LogInformation($"Paying with {payingAccount.Currency} Available Balance:{buyingAccount.AvailableBalance.Value}, Hold:{payingAccount.Hold.Value}");
+        }
+
+        if(side == "sell")
+        {
+            logger.LogInformation($"Selling Currency:{buyingAccount.Currency} Available to Sell:{buyingAccountBalance} Hold:{buyingAccount.Hold.Value}");
+        }
+
+        
 
         return new ResultDTO() { Status = Status.Valid, BuyingAccount = buyingAccount, PayingAccount = payingAccount };
     }
-    
     public ResultDTO CreateAccountErrorResult(string errorMessage, Exception? ex = null, bool? isRetryable = false)
     {
         logger.LogError(ex, errorMessage);
@@ -98,7 +117,6 @@ public class CoinBaseService(ICoinbaseWrapper coinbaseWrapper, ILogger<CoinBaseS
         logger.LogError(ex, errorMessage);
         return new ResultDTO<Order> {  IsRetryable = isRetryable, Status = Status.Error, Message = errorMessage };
     }
-
     private void OrderSuccessResult(string productId, string baseSize, Order buyOrder)
     {
         logger.LogInformation("Placed Buy Order at {UtcNow} => OrderId:{OrderId} ProductId:{productId} BaseSize:{baseSize} Limit Price:{AverageFilledPrice}  Total Order Price:{OutstandingHoldAmount}", buyOrder.OrderId, DateTime.UtcNow, productId, baseSize, buyOrder.OrderConfiguration.LimitGtc.LimitPrice, buyOrder.OutstandingHoldAmount);
